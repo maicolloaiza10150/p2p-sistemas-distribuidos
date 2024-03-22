@@ -25,8 +25,6 @@ def manejar_respuestas():
                 # Notificar a los demás clientes sobre la desconexión
                 for usuario in usuarios_conectados:
                     sock.sendto(f"El cliente {addr[0]} se ha desconectado.".encode(), (usuario, 9999))
-          
-
 
 # Configuración del socket UDP
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -45,42 +43,45 @@ thread_respuestas = threading.Thread(target=manejar_respuestas)
 thread_respuestas.daemon = True
 thread_respuestas.start()
 
-# Loop principal para la interfaz de usuario
+# Bucle principal para la interfaz de usuario
 while True:
-    opcion = input("Ingrese 'listar' para mostrar usuarios conectados, 'enviar' para enviar un mensaje, o 'desconectar' para cerrar el servidor: ")
-    
-    if opcion == 'listar':
-        print("Lista de usuarios conectados:")
-        for usuario in usuarios_conectados:
-            print(usuario)
-         # Eliminar clientes que no responden (por inactividad) después de cierto tiempo
-        clientes_a_eliminar = set()
-        for cliente in usuarios_conectados:
-            if cliente not in usuarios_conectados:
-                clientes_a_eliminar.add(cliente)
-        for cliente in clientes_a_eliminar:
-            usuarios_conectados.remove(cliente)
-            print(f"Cliente {cliente} desconectado por inactividad.")
+    try:
+        opcion = input("Ingrese 'listar' para mostrar usuarios conectados, 'enviar' para enviar un mensaje, o 'desconectar' para cerrar el servidor: ")
+        
+        if opcion == 'listar':
+            print("Lista de usuarios conectados:")
+            for usuario in usuarios_conectados:
+                print(usuario)
+             # Eliminar clientes que no responden (por inactividad) después de cierto tiempo
+            clientes_a_eliminar = set()
+            for cliente in usuarios_conectados:
+                if cliente not in usuarios_conectados:
+                    clientes_a_eliminar.add(cliente)
+            for cliente in clientes_a_eliminar:
+                usuarios_conectados.remove(cliente)
+                print(f"Cliente {cliente} desconectado por inactividad.")
 
-        time.sleep(2)  # Esperar antes de volver a comprobar
+            time.sleep(2)  # Esperar antes de volver a comprobar
 
-# Función para actualizar la lista de usuarios conectados
-        def actualizar_lista_usuarios():
-         global usuarios_conectados
-        usuarios_conectados = set()
+            # Función para actualizar la lista de usuarios conectados
+            def actualizar_lista_usuarios():
+                global usuarios_conectados
+                usuarios_conectados = set()
 
-    elif opcion == 'enviar':
-        destinatario = input("Ingrese la dirección IP del destinatario: ")
-        mensaje = input("Ingrese el mensaje a enviar: ")
-        if destinatario in usuarios_conectados:
-            # Aquí enviamos el mensaje con la dirección IP y el puerto 9999
-            sock.sendto(mensaje.encode(), (destinatario, 9999))
-            print(f"Mensaje enviado a {destinatario}: {mensaje}")
-        else:
-            print("El destinatario no está conectado.")
-    elif opcion == 'desconectar':
-        # Aquí cerramos el servidor y notificamos a los clientes
-        for usuario in usuarios_conectados:
-            sock.sendto(b"El servidor se ha desconectado.", (usuario, 9999))
-        sock.close()
-        break
+        elif opcion == 'enviar':
+            destinatario = input("Ingrese la dirección IP del destinatario: ")
+            mensaje = input("Ingrese el mensaje a enviar: ")
+            if destinatario in usuarios_conectados:
+                # Aquí enviamos el mensaje con la dirección IP y el puerto 9999
+                sock.sendto(mensaje.encode(), (destinatario, 9999))
+                print(f"Mensaje enviado a {destinatario}: {mensaje}")
+            else:
+                print("El destinatario no está conectado.")
+        elif opcion == 'desconectar':
+            # Aquí cerramos el servidor y notificamos a los clientes
+            for usuario in usuarios_conectados:
+                sock.sendto(b"El servidor se ha desconectado.", (usuario, 9999))
+            sock.close()
+            break
+    except EOFError:
+        print("Entrada no aceptada. Utilice 'listar', 'enviar' o 'desconectar'.")
